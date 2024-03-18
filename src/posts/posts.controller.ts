@@ -9,8 +9,9 @@ import {
   Post,
 } from '@nestjs/common';
 import { PostModel } from 'src/types/Post';
+import { PostsService } from './posts.service';
 
-let posts: PostModel[] = [
+const posts: PostModel[] = [
   {
     id: 1,
     author: 'newjeans_official',
@@ -39,20 +40,16 @@ let posts: PostModel[] = [
 
 @Controller('posts')
 export class PostsController {
+  constructor(private readonly postsService: PostsService) {}
+
   @Get()
   getPosts(): PostModel[] {
-    return posts;
+    return this.postsService.getAllPosts();
   }
 
   @Get(':id')
   getPost(@Param('id') id: string) {
-    const post = posts.find((post) => post.id === +id);
-
-    if (!post) {
-      throw new NotFoundException();
-    }
-
-    return post;
+    return this.postsService.getPostById(+id);
   }
 
   @Post()
@@ -61,18 +58,7 @@ export class PostsController {
     @Body('title') title: string,
     @Body('content') content: string,
   ) {
-    const post: PostModel = {
-      id: posts.at(-1).id + 1,
-      author,
-      title,
-      content,
-      likeCount: 0,
-      commentCount: 0,
-    };
-
-    posts.push(post);
-
-    return post;
+    return this.postsService.createPost(author, title, content);
   }
 
   @Patch(':id')
@@ -82,29 +68,11 @@ export class PostsController {
     @Body('title') title: string,
     @Body('content') content: string,
   ) {
-    const post = posts.find((post) => post.id === +id);
-
-    if (!post) {
-      throw new NotFoundException();
-    }
-
-    if (author) {
-      post.author = author;
-    }
-
-    if (title) {
-      post.title = title;
-    }
-
-    if (content) {
-      post.content = content;
-    }
-
-    return post;
+    return this.postsService.updatePost(+id, author, title, content);
   }
 
   @Delete(':id')
   deletePost(@Param('id') id: string) {
-    posts = posts.filter((post) => post.id !== +id);
+    return this.postsService.deletePost(+id);
   }
 }

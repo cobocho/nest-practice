@@ -2,22 +2,20 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModel } from './entity/user.entity';
-import { ProfileModel } from './entity/profile.entity';
-import PostModel from './entity/post.entity';
-import TagModel from './entity/tag.entity';
+import PostModel from './posts/entity/posts.entity';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserModel, ProfileModel, PostModel, TagModel]),
+    PostsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: '127.0.0.1',
       port: 5432,
       username: 'postgres',
       password: 'postgres',
-      database: 'typeormstudy',
-      entities: [UserModel, ProfileModel, PostModel, TagModel],
+      database: 'postgres',
+      entities: [PostModel],
       synchronize: true,
     }),
   ],

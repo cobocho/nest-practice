@@ -110,9 +110,7 @@ export class AuthService {
      * type: 'access' | 'refresh'
      */
     if (decoded.type !== 'refresh') {
-      throw new UnauthorizedException(
-        '토큰 재발급은 Refresh 토큰으로만 가능합니다!',
-      );
+      throw new UnauthorizedException('토큰 재발급은 Refresh 토큰으로만 가능합니다!');
     }
 
     return this.signToken(
@@ -179,9 +177,7 @@ export class AuthService {
     };
   }
 
-  async authenticateWithEmailAndPassword(
-    user: Pick<UsersModel, 'email' | 'password'>,
-  ) {
+  async authenticateWithEmailAndPassword(user: Pick<UsersModel, 'email' | 'password'>) {
     /**
      * 1. 사용자가 존재하는지 확인 (email)
      * 2. 비밀번호가 맞는지 확인
@@ -214,9 +210,7 @@ export class AuthService {
     return this.loginUser(existingUser);
   }
 
-  async registerWithEmail(
-    user: Pick<UsersModel, 'email' | 'nickname' | 'password'>,
-  ) {
+  async registerWithEmail(user: Pick<UsersModel, 'email' | 'nickname' | 'password'>) {
     const hash = await bcrypt.hash(user.password, HASH_ROUNDS);
 
     const newUser = await this.usersService.createUser({

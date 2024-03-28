@@ -1,11 +1,9 @@
+import { BaseModel } from 'src/common/entity/base.entity';
 import { UsersModel } from 'src/users/entity/users.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity()
-export default class PostModel {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export default class PostModel extends BaseModel {
   @ManyToOne(() => UsersModel, (user) => user.posts, {
     eager: true,
   })

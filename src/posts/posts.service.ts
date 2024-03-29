@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import PostModel from './entity/posts.entity';
 import { createPostDto } from './dto/create-post.dto';
 import { updatePostDto } from './dto/update-post.dto';
+import { PaginatePostDto } from './dto/paginate-post.dto';
+import { HOST, PROTOCOL } from 'src/common/const/env.const';
 
 @Injectable()
 export class PostsService {
@@ -14,6 +16,67 @@ export class PostsService {
 
   async getAllPosts() {
     return this.postsRepository.find();
+  }
+
+  async generatePosts() {
+    for (let i = 0; i < 100; i++) {
+      await this.createPost(1, {
+        title: `임의로 생성된 포스트 ${i}`,
+        content: `임의로 생성된 포스트 콘텐츠 ${i}`,
+      });
+    }
+  }
+
+  async paginatePosts(dto: PaginatePostDto) {
+    const where: FindOptionsWhere<PostModel> = {};
+
+    if (dto.where__id_more_than) {
+      where.id = MoreThan(dto.where__id_more_than);
+    }
+
+    if (dto.where__id_less_than) {
+      where.id = LessThan(dto.where__id_less_than);
+    }
+
+    const posts = await this.postsRepository.find({
+      where,
+      order: {
+        createdAt: dto.order__createdAt,
+      },
+      take: dto.take,
+    });
+    const lastItem = posts.length > 0 ? posts.at(-1) : null;
+
+    const nextUrl = lastItem ? new URL(`${PROTOCOL}://${HOST}/posts?where`) : null;
+
+    if (nextUrl) {
+      for (const key of Object.keys(dto)) {
+        if (dto[key]) {
+          if (key !== 'where__id_more_than' && key === 'ASC') {
+            nextUrl.searchParams.append(key, dto[key]);
+          }
+        }
+      }
+    }
+
+    let key = null;
+
+    if (dto.order__createdAt === 'ASC') {
+      key = 'where_id_more_than';
+    } else {
+      key = 'where_id_less_than';
+    }
+
+    nextUrl?.searchParams.append(key, lastItem.id.toString());
+
+    return {
+      data: posts,
+      cursor: {
+        after: lastItem,
+      },
+      count: posts.length,
+      next: nextUrl ? nextUrl.toString() : null,
+    };
   }
 
   async getPostById(id: number) {
@@ -91,20 +154,6 @@ export class PostsService {
     return this.postsRepository.exist({
       where: {
         id,
-      },
-    });
-  }
-
-  async isPostMine(userId: number, postId: number) {
-    return this.postsRepository.exist({
-      where: {
-        id: postId,
-        author: {
-          id: userId,
-        },
-      },
-      relations: {
-        author: true,
       },
     });
   }

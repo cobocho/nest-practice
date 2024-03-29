@@ -1,11 +1,14 @@
-import { Body, Controller, Post, Headers } from '@nestjs/common';
+import { Body, Controller, Post, Headers, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { MaxLengthPipe, MinLengthPipe } from './pipe/password.pipe';
+import { BasicTokenGuard } from './guard/basic-token.guard';
+import { RefreshTokenGuard } from './guard/bearer-token.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @UseGuards(RefreshTokenGuard)
   @Post('token/access')
   postTokenAccess(@Headers('authorization') rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
@@ -20,26 +23,22 @@ export class AuthController {
     };
   }
 
+  @UseGuards(RefreshTokenGuard)
   @Post('token/refresh')
   postTokenRefresh(@Headers('authorization') rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
 
     const newToken = this.authService.rotateToken(token, true);
 
-    /**
-     * {refreshToken: {token}}
-     */
     return {
       refreshToken: newToken,
     };
   }
 
   @Post('login/email')
+  @UseGuards(BasicTokenGuard)
   postLoginEmail(@Headers('authorization') rawToken: string) {
-    // email:password -> base64
-    // asdkljoijzxlxck;vjaosi;dfjawe;lkrj -> email:password
     const token = this.authService.extractTokenFromHeader(rawToken, false);
-
     const credentials = this.authService.decodeBasicToken(token);
 
     return this.authService.loginWithEmail(credentials);

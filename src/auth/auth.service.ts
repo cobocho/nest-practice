@@ -109,7 +109,7 @@ export class AuthService {
      * email: email,
      * type: 'access' | 'refresh'
      */
-    if (decoded.type !== 'refresh') {
+    if (decoded.payload.type !== 'refresh') {
       throw new UnauthorizedException('토큰 재발급은 Refresh 토큰으로만 가능합니다!');
     }
 
@@ -191,7 +191,6 @@ export class AuthService {
 
     /**
      * 파라미터
-     *
      * 1) 입력된 비밀번호
      * 2) 기존 해시 (hash) -> 사용자 정보에 저장돼있는 hash
      */
